@@ -1,7 +1,9 @@
 streamlit
+streamlit-option-menu
 numpy
 scipy
 sympy
 control
 plotly
 fpdf2
+pandas
