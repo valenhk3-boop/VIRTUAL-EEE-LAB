@@ -1,1 +1,7 @@
-R
+streamlit
+numpy
+scipy
+sympy
+control
+plotly
+fpdf2
