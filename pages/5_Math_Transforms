@@ -1,0 +1,17 @@
+import streamlit as st
+import sympy as sp
+
+st.title("Fourier & Laplace Transforms")
+expr = st.text_input("Enter f(t) (e.g. sin(t) or exp(-t))", "exp(-t)")
+
+if st.button("Calculate Transforms"):
+    t, s, w = sp.symbols('t s w')
+    f = sp.sympify(expr)
+    
+    L = sp.laplace_transform(f, t, s)[0]
+    F = sp.fourier_transform(f, t, w)
+    
+    st.write("### Laplace Transform:")
+    st.latex(sp.latex(L))
+    st.write("### Fourier Transform:")
+    st.latex(sp.latex(F))
