@@ -1,5 +1,7 @@
 streamlit
 streamlit-option-menu
+streamlit-lottie
+requests
 numpy
 scipy
 sympy
