@@ -3,9 +3,8 @@ streamlit-option-menu
 streamlit-lottie
 requests
 numpy
-scipy
+pandas
+plotly
+fpdf
 sympy
 control
-plotly
-fpdf2
-pandas
