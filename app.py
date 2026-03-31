@@ -3,140 +3,99 @@ from streamlit_option_menu import option_menu
 from streamlit_lottie import st_lottie
 import requests
 
-# Page Configuration
-st.set_page_config(page_title="Integrated Virtual Engineering Lab", layout="wide", page_icon="⚡")
+# 1. Page Configuration
+st.set_page_config(page_title="Integrated Virtual Lab", layout="wide", page_icon="⚡")
 
-# Function to load Lottie Animations
-def load_lottieurl(url):
-    r = requests.get(url)
-    if r.status_code != 200:
-        return None
-    return r.json()
-
-# Engineering Animation URL
-lottie_eng = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_96bovdur.json") 
-
-# Enhanced Professional CSS
+# 2. Universal CSS (Applies to all pages)
 st.markdown("""
     <style>
-    .stApp { background-color: #f8f9fa; }
-    [data-testid="stMetricValue"] { font-size: 2rem; color: #007bff; font-weight: 700; }
-    .main-card {
-        background-color: white;
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
-    }
-    .stButton>button {
-        border-radius: 8px;
-        height: 3em;
-        background: linear-gradient(45deg, #007bff, #0056b3);
-        color: white;
-        font-weight: bold;
-        border: none;
-        transition: 0.3s;
-    }
-    .stButton>button:hover { transform: scale(1.02); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    .main { background-color: #f0f2f6; }
+    .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #007bff; }
+    .stButton>button { border-radius: 8px; font-weight: bold; transition: 0.3s; }
+    .stButton>button:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    [data-testid="stSidebar"] { background-color: #f8f9fa; border-right: 1px solid #e0e0e0; }
     </style>
     """, unsafe_allow_html=True)
 
-# Session State Initialization
+# 3. Helpers
+def load_lottieurl(url):
+    try:
+        r = requests.get(url)
+        return r.json() if r.status_code == 200 else None
+    except: return None
+
+# 4. Initialize Permanent Session State
 if 'auth' not in st.session_state:
     st.session_state.auth = False
-if 'completed' not in st.session_state:
-    st.session_state.completed = []
+if 'user' not in st.session_state:
+    st.session_state.user = {}
+if 'completed_labs' not in st.session_state:
+    st.session_state.completed_labs = {} # Dictionary: {"Exp Name": {"score": 100, "date": "..."}}
 
-# --- LOGIN SCREEN ---
+# --- LOGIN GATE ---
 if not st.session_state.auth:
     col1, col2 = st.columns([1, 1])
-    
     with col1:
-        st_lottie(lottie_eng, height=400, key="coding")
-        
+        lottie_url = "https://assets5.lottiefiles.com/packages/lf20_96bovdur.json"
+        st_lottie(load_lottieurl(lottie_url), height=400)
+    
     with col2:
-        st.title("⚡ Virtual Lab Portal")
-        st.markdown("### Student Access Login")
-        
-        with st.form("login_form"):
-            name = st.text_input("Full Name")
-            reg = st.text_input("Registration Number (Reg. No)")
-            dept = st.selectbox("Department", ["Electrical & Electronics (EEE)", "Electronics & Comm (ECE)", "Instrumentation (EIE)"])
-            
-            submit = st.form_submit_button("INITIALIZE SESSION")
-            
-            if submit:
+        st.title("🛡️ Student Lab Portal")
+        with st.form("login"):
+            name = st.text_input("Student Name")
+            reg = st.text_input("Registration Number")
+            dept = st.selectbox("Department", ["EEE", "ECE", "EIE", "CSE"])
+            if st.form_submit_button("ENTER LABORATORY"):
                 if name and reg:
                     st.session_state.user = {"name": name, "reg": reg, "dept": dept}
                     st.session_state.auth = True
                     st.rerun()
-                else:
-                    st.error("Please provide all credentials to enter the lab.")
+                else: st.error("Credentials required.")
 
-# --- DASHBOARD SCREEN ---
+# --- MAIN DASHBOARD ---
 else:
-    # Professional Sidebar Navigation
     with st.sidebar:
-        st.markdown(f"### 👨‍🎓 {st.session_state.user['name']}")
-        st.caption(f"ID: {st.session_state.user['reg']}")
-        st.markdown("---")
+        st.subheader(f"👨‍🎓 {st.session_state.user['name']}")
+        st.caption(f"Reg: {st.session_state.user['reg']}")
         
-        # This replaces the standard sidebar list with a professional menu
+        # Professional Navigation
         selected = option_menu(
-            menu_title="Main Menu",
-            options=["Dashboard", "Lab Manual", "Feedback", "Logout"],
-            icons=["house", "book", "chat-left-dots", "box-arrow-right"],
-            menu_icon="cast",
-            default_index=0,
+            menu_title=None,
+            options=["Home", "My Reports", "Feedback", "Logout"],
+            icons=["house", "file-earmark-check", "chat-quote", "box-arrow-right"],
+            styles={"container": {"padding": "0!important", "background-color": "#f8f9fa"}}
         )
 
-    if selected == "Dashboard":
-        st.title("🏛️ Integrated Virtual Lab Dashboard")
-        st.markdown(f"Welcome back, **{st.session_state.user['name']}**. All system modules are active.")
+    if selected == "Home":
+        st.title("🏫 Virtual Lab Dashboard")
+        st.markdown(f"Welcome to the **{st.session_state.user['dept']}** Virtual Lab Environment.")
         
-        # Metric Cards
-        m_col1, m_col2, m_col3 = st.columns(3)
-        with m_col1:
-            st.metric("Experiments Completed", len(st.session_state.completed))
-        with m_col2:
-            st.metric("Total Modules", "5")
-        with m_col3:
-            st.metric("System Health", "100%")
-
+        # Dynamic Stats
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Experiments Finished", len(st.session_state.completed_labs))
+        c2.metric("Lab Status", "Online")
+        c3.metric("Academic Year", "2025-26")
+        
         st.markdown("---")
-        
-        # Action Center
-        st.subheader("🚀 Quick Start")
-        st.info("Use the sidebar on the left to navigate between different Subjects and Experiments.")
-        
-        cols = st.columns(2)
-        with cols[0]:
-            st.markdown("""
-            <div class='main-card'>
-                <h4>Instructions</h4>
-                <ul>
-                    <li>Select a subject from the file list on the sidebar.</li>
-                    <li>Complete the interactive simulation to unlock the quiz.</li>
-                    <li>Score 100% on the quiz to download your professional PDF report.</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
-            
-        with cols[1]:
-             if len(st.session_state.completed) > 0:
-                 st.success(f"Last Activity: {st.session_state.completed[-1]} finished.")
-             else:
-                 st.warning("No activity recorded in this session yet.")
+        st.subheader("📋 Instructions")
+        st.info("1. Select a Subject from the sidebar list.\n2. Complete the Simulation & Quiz.\n3. Download the PDF from 'My Reports'.")
+
+    elif selected == "My Reports":
+        st.title("📄 Completed Experiment Reports")
+        if not st.session_state.completed_labs:
+            st.warning("No reports available. Complete an experiment first.")
+        else:
+            for lab, details in st.session_state.completed_labs.items():
+                with st.expander(f"✅ {lab}"):
+                    st.write(f"Completed on: {details.get('date', 'N/A')}")
+                    st.write(f"Quiz Score: {details.get('score', 0)}%")
+                    # The download button is handled within the specific pages 
+                    # to ensure the data is fresh.
 
     elif selected == "Feedback":
-        st.header("📋 Lab Feedback Form")
-        st.write("Help us improve the virtual lab experience.")
-        with st.form("feedback"):
-            rating = st.slider("Rate the UI Experience", 1, 5, 5)
-            comments = st.text_area("Suggestions for improvements")
-            if st.form_submit_button("Submit Review"):
-                st.balloons()
-                st.success("Thank you for your feedback!")
+        st.title("💬 Feedback")
+        st.text_area("Observations or Issues:")
+        if st.button("Submit"): st.success("Thank you!")
 
     elif selected == "Logout":
         st.session_state.auth = False
