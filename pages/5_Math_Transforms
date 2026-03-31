@@ -1,17 +1,50 @@
 import streamlit as st
 import sympy as sp
+from utils.pdf_handler import generate_report
+from datetime import datetime
 
-st.title("Fourier & Laplace Transforms")
-expr = st.text_input("Enter f(t) (e.g. sin(t) or exp(-t))", "exp(-t)")
+if 'auth' not in st.session_state or not st.session_state.auth:
+    st.warning("⚠️ Please login on the Homepage.")
+    st.stop()
 
-if st.button("Calculate Transforms"):
-    t, s, w = sp.symbols('t s w')
-    f = sp.sympify(expr)
+st.title("📐 Mathematical Transforms Lab")
+
+exp = st.sidebar.radio("Module", ["1. Laplace Transform", "2. Fourier Transform", "3. Inverse Laplace"])
+
+t, s, w = sp.symbols('t s w')
+
+# Standard Logic for all 3 Experiments
+st.header(f"Experiment: {exp}")
+t1, t2, t3 = st.tabs(["📖 Theory", "🧮 Solver", "📝 Record"])
+
+with t1:
+    if "Laplace" in exp:
+        st.latex(r"F(s) = \int_{0}^{\infty} f(t) e^{-st} dt")
+        
+    else:
+        st.latex(r"F(\omega) = \int_{-\infty}^{\infty} f(t) e^{-j\omega t} dt")
+        
+
+with t2:
+    func_input = st.text_input("Enter Function f(t):", "exp(-a*t) * sin(w*t)")
+    st.info("Use symbols like: t, s, w, a, b, pi, sin, cos, exp")
     
-    L = sp.laplace_transform(f, t, s)[0]
-    F = sp.fourier_transform(f, t, w)
-    
-    st.write("### Laplace Transform:")
-    st.latex(sp.latex(L))
-    st.write("### Fourier Transform:")
-    st.latex(sp.latex(F))
+    if st.button("Compute"):
+        try:
+            f = sp.sympify(func_input)
+            if "Inverse" in exp:
+                res = sp.inverse_laplace_transform(f, s, t)
+            elif "Laplace" in exp:
+                res = sp.laplace_transform(f, t, s)[0]
+            else:
+                res = sp.fourier_transform(f, t, w)
+            
+            st.write("### Result:")
+            st.latex(sp.latex(res))
+        except:
+            st.error("Invalid Syntax. Please use SymPy format.")
+
+with t3:
+    if st.button("Save Math Record"):
+        st.session_state.completed_labs[exp] = {"date": datetime.now().strftime("%Y-%m-%d"), "score": 100}
+        st.success("Mathematical proof saved to reports.")
